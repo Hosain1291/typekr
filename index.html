@@ -6,140 +6,165 @@
 <title>typekr — 한글 타자기</title>
 <style>
 @font-face{font-family:'DXType';src:url(fonts/DXTypeB.woff2) format('woff2'),url(fonts/DXTypeB.woff) format('woff');font-display:block}
-:root{--u:12px;--ink:#1c1a1e;--red:#b3261e}
+:root{--ink:#1c1a1e;--red:#b3261e;
+  --body:#4a5a47;--bodyD:#2e392d;
+  --crinkle:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1.5px),radial-gradient(rgba(0,0,0,.22) 1px,transparent 1.6px);
+  --chrome:linear-gradient(180deg,#fdfdfd 0%,#cfd2d4 18%,#7d8184 45%,#e9ecee 62%,#a3a7aa 85%,#5f6366 100%)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%}
-body{background:#2a2420 radial-gradient(ellipse at 50% 0%,#5a4a3c 0%,#2a2420 70%);color:#eee;font-family:'DXType','Batang',serif;overflow-x:hidden;user-select:none;-webkit-user-select:none}
-#wrap{max-width:1100px;margin:0 auto;padding:10px 8px 24px}
+html,body{margin:0}
+body{min-height:100vh;color:#eee;font-family:'DXType','Batang',serif;overflow-x:hidden;user-select:none;-webkit-user-select:none;
+  background:#3b2a1d;background-image:repeating-linear-gradient(92deg,rgba(0,0,0,.08) 0 2px,transparent 2px 9px),repeating-linear-gradient(88deg,rgba(255,220,180,.04) 0 1px,transparent 1px 23px),radial-gradient(ellipse at 50% 30%,#7a5636 0%,#3b2a1d 75%)}
+#scaler{position:relative;margin:0 auto;padding-top:6px}
+#machine{position:absolute;left:0;top:0;width:1000px;height:956px;transform-origin:0 0}
 
-/* ---------- 종이 & 캐리지 ---------- */
-#stage{position:relative;height:calc(var(--u)*30 + 70px);overflow:hidden}
-#carriage{position:absolute;left:0;top:0;will-change:transform}
+/* ---------- 캐리지 ---------- */
+#carriage{position:absolute;left:0;top:0;will-change:transform;z-index:2}
+#table{position:absolute;top:150px;height:200px;clip-path:polygon(9% 0,91% 0,100% 100%,0 100%);
+  background:linear-gradient(180deg,#5c615f,#2b2f2e 70%,#1d201f);box-shadow:inset 0 2px 0 #fff3}
+#table::after{content:'';position:absolute;inset:18px 16%;background:repeating-linear-gradient(90deg,transparent 0 46px,rgba(0,0,0,.35) 46px 50px)}
 #clip{position:absolute;left:0;top:0;overflow:hidden}
 #paper{position:absolute;left:0;top:0;background:#f5f0e3;
-  background-image:radial-gradient(circle at 20% 30%,rgba(0,0,0,.025),transparent 40%),radial-gradient(circle at 80% 70%,rgba(120,90,40,.04),transparent 50%),linear-gradient(90deg,rgba(0,0,0,.04),transparent 4%,transparent 96%,rgba(0,0,0,.04));
-  box-shadow:0 0 18px rgba(0,0,0,.45);will-change:transform}
-.s{position:absolute;text-align:center;color:var(--ink);font-family:'DXType','Batang',serif;white-space:pre;pointer-events:none;
-  text-shadow:0 0 .6px rgba(20,18,22,.7)}
+  background-image:radial-gradient(circle at 20% 30%,rgba(0,0,0,.025),transparent 40%),radial-gradient(circle at 80% 70%,rgba(120,90,40,.05),transparent 50%),linear-gradient(90deg,rgba(0,0,0,.05),transparent 3%,transparent 97%,rgba(0,0,0,.05));
+  box-shadow:0 0 14px rgba(0,0,0,.5);will-change:transform}
+.s{position:absolute;text-align:center;color:var(--ink);font-family:'DXType','Batang',serif;white-space:pre;pointer-events:none;text-shadow:0 0 .6px rgba(20,18,22,.7)}
 .s.red{color:var(--red);text-shadow:0 0 .6px rgba(150,30,20,.6)}
-#platen{position:absolute;border-radius:28px;
-  background:linear-gradient(180deg,#0c0c0c 0%,#3a3a3a 22%,#1b1b1b 48%,#050505 100%);box-shadow:0 6px 10px rgba(0,0,0,.6)}
-.knob{position:absolute;top:-6px;width:46px;height:68px;border-radius:12px;
-  background:linear-gradient(90deg,#111,#444 40%,#1a1a1a 60%,#000);box-shadow:inset 0 0 0 2px #222}
-.knob::after{content:'';position:absolute;inset:8px 6px;border-radius:8px;background:repeating-linear-gradient(0deg,#2b2b2b 0 3px,#111 3px 5px)}
-#bail{position:absolute;height:6px;border-radius:3px;background:linear-gradient(#f2f2f2,#8a8a8a 60%,#c9c9c9)}
-#bail i{position:absolute;top:-3px;width:22px;height:12px;border-radius:6px;background:#222}
-#lever{position:absolute;width:120px;height:14px;border-radius:7px;cursor:pointer;
-  background:linear-gradient(#fafafa,#9a9a9a 55%,#e0e0e0);box-shadow:0 3px 6px rgba(0,0,0,.6);transform-origin:right center;transform:rotate(-14deg)}
-#lever::before{content:'';position:absolute;left:-14px;top:-7px;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#888 60%,#444)}
-#lever.pull{animation:pull .35s}
-@keyframes pull{40%{transform:rotate(-34deg)}}
-#guide{position:absolute;left:50%;width:0;height:0;z-index:5;pointer-events:none}
-#guide .ear{position:absolute;top:16px;width:12px;height:22px;background:linear-gradient(90deg,#9a9a9a,#f4f4f4 50%,#8a8a8a);border-radius:3px 3px 6px 6px}
-#guide .ear.l{left:calc(var(--u)*-1.6 - 14px)}#guide .ear.r{left:calc(var(--u)*1.6 + 2px)}
-#guide .mark{position:absolute;left:-1px;top:18px;width:2px;height:8px;background:#e73}
-#ribbon{position:absolute;left:calc(var(--u)*-1.6);width:calc(var(--u)*3.2);height:calc(var(--u)*1.2);top:20px;
-  background:linear-gradient(#111 0 50%,#a11 50% 100%);border-radius:2px;opacity:.92;transition:transform 60ms}
-#ribbon.hit{transform:translateY(calc(var(--u)*-1.7))}
+#platen{position:absolute;height:62px;border-radius:30px/31px;
+  background:linear-gradient(180deg,#000 0%,#2c2c2c 16%,#4a4a4a 26%,#1e1e1e 50%,#0a0a0a 78%,#000 100%);box-shadow:0 8px 12px rgba(0,0,0,.55)}
+.knob{position:absolute;width:52px;height:84px;border-radius:14px;background:linear-gradient(90deg,#0c0c0c,#555 38%,#222 62%,#000);box-shadow:0 6px 10px #0008}
+.knob::after{content:'';position:absolute;inset:9px 7px;border-radius:9px;background:repeating-linear-gradient(0deg,#2e2e2e 0 3px,#0e0e0e 3px 6px)}
+.knob::before{content:'';position:absolute;top:30px;width:16px;height:24px;background:var(--chrome);border-radius:3px}
+.knob.l::before{right:-14px}.knob.r::before{left:-14px}
+#bail{position:absolute;height:7px;border-radius:4px;background:var(--chrome);box-shadow:0 2px 3px #0009}
+#bail i{position:absolute;top:-4px;width:26px;height:15px;border-radius:7px;background:linear-gradient(#333,#0a0a0a)}
+#scale{position:absolute;height:20px;border-radius:3px;background:var(--chrome);box-shadow:0 2px 3px #0008;overflow:hidden}
+#scale span{position:absolute;bottom:0;width:1px;background:#222}
+#scale b{position:absolute;top:0;font:9px/10px Arial,sans-serif;color:#111;transform:translateX(-50%)}
+#rail{position:absolute;height:14px;border-radius:3px;background:linear-gradient(#3b3b3b,#0c0c0c)}
+#lever{position:absolute;width:150px;height:15px;border-radius:8px;cursor:pointer;background:var(--chrome);box-shadow:0 4px 6px rgba(0,0,0,.6);transform-origin:right center;transform:rotate(-16deg)}
+#lever::before{content:'';position:absolute;left:-18px;top:-9px;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#999 55%,#444)}
+#lever.pull{animation:pull .38s}
+@keyframes pull{40%{transform:rotate(-38deg)}}
+#rel{position:absolute;width:16px;height:70px;border-radius:8px;background:var(--chrome);box-shadow:0 3px 5px #0008;transform:rotate(14deg)}
 #stage.shake #carriage{animation:shake .18s}
 @keyframes shake{25%{margin-left:-3px}75%{margin-left:3px}}
 
-/* ---------- 본체 ---------- */
-#machine{position:relative;margin-top:-6px;border-radius:26px 26px 40px 40px;padding:18px 18px 26px;
-  background:#3c4a3c;background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1.4px),radial-gradient(rgba(0,0,0,.18) 1px,transparent 1.6px),linear-gradient(#4b5b49,#2f3a2f);
-  background-size:4px 4px,5px 5px,100% 100%;box-shadow:0 18px 40px rgba(0,0,0,.7),inset 0 2px 0 rgba(255,255,255,.15)}
-#topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-bottom:14px}
-#plate{padding:6px 16px;border-radius:6px;background:linear-gradient(#e9cf86,#a8833a 55%,#d9b968);color:#3a2a0c;
-  box-shadow:inset 0 1px 0 #fff6,0 2px 4px #0008;text-align:center;line-height:1.05}
-#plate b{display:block;font-size:22px;letter-spacing:2px}#plate small{font-size:11px;letter-spacing:3px}
-#ctrls{display:flex;gap:6px;flex-wrap:wrap}
+/* ---------- 몸체 ---------- */
+.paint{background-color:var(--body);background-image:var(--crinkle),linear-gradient(180deg,#5d6f59,#3a4838);background-size:4px 4px,5px 5px,100% 100%}
+#hood{position:absolute;left:40px;top:416px;width:920px;height:190px;border-radius:170px 170px 0 0/110px 110px 0 0;z-index:1;box-shadow:inset 0 3px 0 rgba(255,255,255,.18),inset 0 -20px 30px rgba(0,0,0,.25)}
+#seg{position:absolute;left:200px;top:0;width:520px;height:160px;border-radius:0 0 260px 260px/0 0 160px 160px;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 0%,#252525 0%,#060606 70%);box-shadow:inset 0 0 0 4px #1a1a1a,0 2px 0 rgba(255,255,255,.15)}
+.spool{position:absolute;width:132px;height:132px;border-radius:50%;z-index:4;
+  background:radial-gradient(circle,#ddd 0 9px,#555 10px 13px,#151515 14px 40px,#2a2a2a 41px 44px,#141414 45px 54px,transparent 55px),var(--chrome);
+  box-shadow:0 6px 10px #000a,inset 0 0 0 3px #888}
+.spool::after{content:'';position:absolute;left:62px;top:20px;width:8px;height:22px;background:#bbb;border-radius:2px;box-shadow:0 70px 0 #bbb}
+.spool.turn{animation:spin .5s linear}
+@keyframes spin{to{transform:rotate(30deg)}}
+#rib{position:absolute;left:0;top:0;z-index:3;pointer-events:none}
+#guide{position:absolute;left:500px;width:0;height:0;z-index:6;pointer-events:none}
+#guide .ear{position:absolute;top:14px;width:13px;height:30px;background:linear-gradient(90deg,rgba(180,190,190,.55),rgba(255,255,255,.85) 50%,rgba(150,160,160,.55));border-radius:3px 3px 6px 6px;box-shadow:0 0 0 1px #6669}
+#guide .ear.l{left:-36px}#guide .ear.r{left:23px}
+#guide .mark{position:absolute;left:-1px;top:16px;width:2px;height:9px;background:#e73}
+#ribbon{position:absolute;left:-21px;width:42px;height:15px;top:22px;background:linear-gradient(#111 0 50%,#9e1a14 50% 100%);border-radius:2px;transition:transform 55ms}
+#ribbon.hit{transform:translateY(-19px)}
+#abar{position:absolute;left:0;top:0;z-index:5;pointer-events:none}
+#front{position:absolute;left:18px;top:566px;width:964px;height:372px;border-radius:26px 26px 70px 70px/26px 26px 50px 50px;z-index:1;
+  box-shadow:0 26px 40px rgba(0,0,0,.65),inset 0 3px 0 rgba(255,255,255,.15),inset 0 -14px 24px rgba(0,0,0,.35)}
+#plate{position:absolute;left:50%;top:-24px;transform:translateX(-50%);padding:6px 26px 5px;border-radius:7px;z-index:3;text-align:center;line-height:1.05;
+  background:linear-gradient(#f0d995,#a8833a 52%,#e0c070);color:#3a2a0c;box-shadow:inset 0 1px 0 #fff8,0 3px 5px #0009}
+#plate b{display:block;font-size:24px;letter-spacing:4px}#plate small{font-size:10px;letter-spacing:4px}
+.foot{position:absolute;bottom:-14px;width:90px;height:22px;border-radius:0 0 14px 14px;background:#151515}
+#kb{position:absolute;left:46px;top:46px;width:872px;height:298px;border-radius:18px;z-index:0;
+  background:linear-gradient(#0d100d,#1f261e 40%,#262e25);box-shadow:inset 0 10px 20px #000c}
+.row{position:absolute;display:flex;gap:9px}
+.k{position:relative;width:54px;height:54px;border-radius:50%;cursor:pointer;flex:none;top:0;
+  background:radial-gradient(circle at 50% 38%,#303030,#0a0a0a 68%);
+  box-shadow:0 0 0 4px #d6d9db,0 0 0 5px #5a5d5f,0 0 0 6px #b5b9bb,0 8px 6px 2px #000b;transition:top 45ms;
+  display:flex;align-items:center;justify-content:center;color:#f4f0e2}
+.k::before{content:'';position:absolute;inset:5px;border-radius:50%;background:radial-gradient(ellipse at 50% 22%,rgba(255,255,255,.22),transparent 55%)}
+.k::after{content:'';position:absolute;left:50%;bottom:50%;width:7px;margin-left:-3.5px;height:80px;z-index:-1;background:linear-gradient(90deg,#050505,#4a4a4a 50%,#050505)}
+.k .m{font-size:21px;line-height:1}
+.k .sh{position:absolute;top:8px;left:12px;font-size:11px;color:#bbb}
+.k .en{position:absolute;bottom:7px;right:12px;font-size:10px;color:#9a9}
+.k.down{top:6px}
+.k.wide{border-radius:27px;width:92px}.k.wide .m{font-size:14px}
+.k.lit{box-shadow:0 0 0 4px #f6a64a,0 0 0 5px #5a5d5f,0 0 0 6px #b5b9bb,0 8px 6px 2px #000b}
+#space{position:absolute;left:250px;top:262px;width:400px;height:22px;border-radius:11px;cursor:pointer;background:var(--chrome);box-shadow:0 6px 6px #000b;transition:top 45ms}
+#space.down{top:267px}
+#space::before,#space::after{content:'';position:absolute;bottom:14px;width:12px;height:40px;z-index:-1;background:linear-gradient(90deg,#222,#777,#222)}
+#space::before{left:40px}#space::after{right:40px}
+
+/* ---------- 아래 조작판 ---------- */
+#desk{max-width:1000px;margin:0 auto;padding:4px 10px 20px;text-align:center}
+#status{display:inline-block;font-size:14px;color:#3a2a14;background:#efe6cf;padding:5px 14px;border-radius:3px;box-shadow:0 2px 4px #0007;transform:rotate(-.6deg);margin-bottom:10px}
+#ctrls{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .btn{font:inherit;font-size:13px;color:#eee;background:linear-gradient(#2a2a2a,#111);border:1px solid #000;border-radius:6px;padding:6px 10px;cursor:pointer;box-shadow:0 2px 0 #000,inset 0 1px 0 #fff2}
 .btn:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #fff2}
 .btn .lamp{display:inline-block;width:8px;height:8px;border-radius:50%;background:#431;margin-right:5px;vertical-align:1px}
 .btn.on .lamp{background:#f93;box-shadow:0 0 8px #f93}
-#status{font-size:13px;color:#cfd9c6;min-width:180px}
-#msg{position:absolute;left:50%;top:-40px;transform:translateX(-50%);background:#000c;color:#fc6;padding:6px 14px;border-radius:6px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;z-index:9}
+#bPhone{background:linear-gradient(#7a5a1a,#4a3408)}
+#msg{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#000d;color:#fc6;padding:7px 16px;border-radius:6px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;z-index:99}
 #msg.show{opacity:1}
-
-/* ---------- 키보드 ---------- */
-#kb{display:flex;flex-direction:column;gap:9px;align-items:center;padding:14px 6px 6px;border-radius:14px;background:linear-gradient(#1f261f,#2c362b)}
-.row{display:flex;gap:7px}
-.k{position:relative;width:52px;height:52px;border-radius:50%;cursor:pointer;flex:none;
-  background:radial-gradient(circle at 50% 40%,#2b2b2b,#090909 70%);
-  box-shadow:0 0 0 4px #c8c8c8,0 0 0 5px #555,0 7px 0 2px #111,0 9px 8px 2px #0009;transition:transform 50ms,box-shadow 50ms;
-  display:flex;align-items:center;justify-content:center;color:#f3efe2}
-.k::before{content:'';position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle at 50% 30%,#fff1,transparent 60%)}
-.k .m{font-size:20px;line-height:1}
-.k .sh{position:absolute;top:7px;left:11px;font-size:11px;color:#bbb}
-.k .en{position:absolute;bottom:6px;right:12px;font-size:10px;color:#9a9}
-.k.down{transform:translateY(5px);box-shadow:0 0 0 4px #c8c8c8,0 0 0 5px #555,0 2px 0 2px #111,0 3px 4px 2px #0009}
-.k.wide{border-radius:26px;width:92px}.k.wide .m{font-size:14px}
-.k.sp{width:420px;border-radius:26px}
-.k.lit{box-shadow:0 0 0 4px #f6a64a,0 0 0 5px #553,0 7px 0 2px #111,0 9px 8px 2px #0009}
-#hint{text-align:center;color:#a9b5a2;font-size:13px;margin-top:12px;line-height:1.6}
+#hint{color:#d9c7a6;font-size:13px;margin-top:12px;line-height:1.7}
 #hint kbd{font-family:inherit;background:#111;border:1px solid #000;border-radius:4px;padding:0 5px;color:#eee}
-
-@media (max-width:760px){
-  #wrap{padding:6px 2px 16px}
-  #machine{padding:12px 6px 16px;border-radius:18px}
-  .row{gap:4px}#kb{gap:7px;padding:10px 2px 4px}
-  .k{--kw:calc((100vw - 76px)/14.6);width:var(--kw);height:40px;border-radius:8px;box-shadow:0 0 0 2px #bbb,0 4px 0 1px #111}
-  .k.down{transform:translateY(3px);box-shadow:0 0 0 2px #bbb,0 1px 0 1px #111}
-  .k.lit{box-shadow:0 0 0 2px #f6a64a,0 4px 0 1px #111}
-  .k .m{font-size:14px}.k .sh{top:1px;left:2px;font-size:8px}.k .en{display:none}
-  .k.wide{width:calc(var(--kw)*1.6);border-radius:8px}.k.wide .m{font-size:10px}.k.sp{width:58vw}
-  #plate b{font-size:17px}.btn{font-size:12px;padding:5px 7px}
-  .knob{display:none}#lever{width:70px}
-}
+#ta{position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0;resize:none}
 </style>
 </head>
 <body>
-<div id="wrap">
+<div id="msg"></div>
+<div id="scaler">
+ <div id="machine">
   <div id="stage">
-    <div id="carriage">
-      <div id="clip"><div id="paper"></div></div>
-      <div id="bail"><i style="left:22%"></i><i style="right:22%"></i></div>
-      <div id="platen"><div class="knob" style="left:-40px"></div><div class="knob" style="right:-40px"></div></div>
-      <div id="lever" title="줄바꿈 레버 (Enter)"></div>
-    </div>
-    <div id="guide"><div class="ear l"></div><div class="ear r"></div><div id="ribbon"></div><div class="mark"></div></div>
+   <div id="carriage">
+    <div id="table"></div>
+    <div id="clip"><div id="paper"></div></div>
+    <div id="platen"></div>
+    <div class="knob l" id="kl"></div><div class="knob r" id="kr"></div>
+    <div id="bail"><i style="left:24%"></i><i style="right:24%"></i></div>
+    <div id="scale"></div>
+    <div id="rail"></div>
+    <div id="lever" title="줄바꿈 레버 (Enter)"></div>
+    <div id="rel"></div>
+   </div>
   </div>
-
-  <div id="machine">
-    <div id="msg"></div>
-    <div id="topbar">
-      <div id="plate"><b>한글타자기</b><small>TYPEKR · 2벌식</small></div>
-      <div id="status"></div>
-      <div id="ctrls">
-        <button class="btn" id="bLang"><span class="lamp"></span>한/영</button>
-        <button class="btn" id="bInk">리본: 검정</button>
-        <button class="btn" id="bBs">백스페이스: 지우기</button>
-        <button class="btn on" id="bSnd"><span class="lamp"></span>소리</button>
-        <button class="btn" id="bNew">새 종이</button>
-        <button class="btn" id="bCopy">글 복사</button>
-        <button class="btn" id="bPng">그림 저장</button>
-      </div>
-    </div>
-    <div id="kb"></div>
+  <div id="hood" class="paint"><div id="seg"><svg id="fan" width="520" height="160"></svg></div></div>
+  <div class="spool" id="sp1" style="left:150px;top:430px"></div>
+  <div class="spool" id="sp2" style="left:718px;top:430px"></div>
+  <svg id="rib" width="1000" height="600"></svg>
+  <svg id="abar" width="1000" height="700"><line id="abl" x1="0" y1="0" x2="0" y2="0" stroke="#c9c9c9" stroke-width="5" stroke-linecap="round" opacity="0"/><rect id="abs" width="12" height="16" x="-6" y="-8" fill="#2a2a2a" opacity="0"/></svg>
+  <div id="guide"><div class="ear l"></div><div class="ear r"></div><div id="ribbon"></div><div class="mark"></div></div>
+  <div id="front" class="paint">
+   <div id="plate"><b>한글타자기</b><small>TYPEKR · 두벌식 · 1966</small></div>
+   <div id="kb"></div>
+   <div class="foot" style="left:60px"></div><div class="foot" style="right:60px"></div>
   </div>
-  <div id="hint">키보드로 바로 치거나 화면의 자판을 누르세요 · <kbd>Shift</kbd>+<kbd>Space</kbd> 또는 <kbd>한/영</kbd> 키로 한영 전환 · <kbd>Enter</kbd> 줄바꿈 · 줄 끝 8칸 전에 종이 울려요</div>
+ </div>
 </div>
-
+<div id="desk">
+ <div id="status"></div>
+ <div id="ctrls">
+  <button class="btn" id="bPhone">⌨ 폰 키보드로 치기</button>
+  <button class="btn" id="bLang"><span class="lamp"></span>한/영</button>
+  <button class="btn" id="bInk">리본: 검정</button>
+  <button class="btn" id="bBs">백스페이스: 지우기</button>
+  <button class="btn on" id="bSnd"><span class="lamp"></span>소리</button>
+  <button class="btn" id="bNew">새 종이</button>
+  <button class="btn" id="bCopy">글 복사</button>
+  <button class="btn" id="bPng">그림 저장</button>
+ </div>
+ <div id="hint">키보드로 바로 치거나 타자기 자판을 누르세요 · <kbd>Shift</kbd>+<kbd>Space</kbd> 또는 <kbd>한/영</kbd> 한영 전환 · <kbd>Enter</kbd> 또는 왼쪽 레버로 줄바꿈 · 줄 끝 8칸 전에 종이 울려요</div>
+</div>
+<textarea id="ta" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
 <script>
 (()=>{
-/* ================= 설정 ================= */
 const MAXX=64, MARGIN=8, MAXLINES=36, TOPL=3;
-let U=12, LH=31, FS=22;
+const U=12, LH=31, FS=22, W=1000, SY=330;
 const $=id=>document.getElementById(id);
-const stage=$('stage'),carriage=$('carriage'),clip=$('clip'),paper=$('paper'),platen=$('platen'),bail=$('bail'),lever=$('lever'),guide=$('guide'),ribbon=$('ribbon');
-
-/* ================= 상태 ================= */
+const stage=$('stage'),carriage=$('carriage'),clip=$('clip'),paper=$('paper'),lever=$('lever'),ribbon=$('ribbon');
 let st={strikes:[],line:0,x:0,hangul:true,red:false,real:false,sound:true};
-let comp=null, hist=[], cur=null, bellRung=false, shiftSticky=false;
+let comp=null, hist=[], cur=null, bellRung=false, shiftSticky=false, lastCode='';
 const els=new Map();
 try{const v=JSON.parse(localStorage.getItem('typekr-v1')); if(v&&Array.isArray(v.strikes)) Object.assign(st,v);}catch(e){}
 let saveT; function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('typekr-v1',JSON.stringify(st))}catch(e){}},300)}
-
 /* ================= 한글 조합 (두벌식) ================= */
 const CHO="ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
 const JUNG="ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ";
@@ -188,43 +213,53 @@ const snd={
   paper(){if(!audio())return;const t=ac.currentTime;for(let i=0;i<14;i++)burst(t+i*.03,.03,1500+Math.random()*800,.8,.25)}
 };
 
-/* ================= 배치 ================= */
-function sizes(){
-  const w=innerWidth;U=w<760?8:12;LH=Math.round(U*2.6);FS=Math.round(U*1.82);
-  document.documentElement.style.setProperty('--u',U+'px');
+/* ================= 기계 배치 ================= */
+const PW=(MAXX+MARGIN*2)*U, PH=(TOPL+MAXLINES+3)*LH;
+function setBox(id,l,t,w,h){const e=$(id);e.style.left=l+'px';e.style.top=t+'px';if(w!=null)e.style.width=w+'px';if(h!=null)e.style.height=h+'px'}
+function build(){
+  carriage.style.width=PW+'px';
+  setBox('table',PW*.06,150,PW*.88,200);
+  setBox('clip',0,0,PW,SY+24);
+  paper.style.width=PW+'px';paper.style.height=PH+'px';
+  setBox('platen',0,SY+2,PW);
+  setBox('kl',-54,SY-9);setBox('kr',PW+2,SY-9);
+  setBox('bail',PW*.05,SY+22,PW*.9);
+  setBox('scale',MARGIN*U-24,SY+66,MAXX*U+48);
+  setBox('rail',-20,SY+86,PW+40);
+  setBox('lever',-205,SY+14);
+  setBox('rel',PW+26,SY-60);
+  // 눈금자
+  const sc=$('scale');let h='';
+  for(let i=0;i<=MAXX;i++){const x=24+i*U;h+=`<span style="left:${x}px;height:${i%10===0?9:i%5===0?6:3}px"></span>`;if(i%10===0)h+=`<b style="left:${x}px">${i}</b>`}
+  sc.innerHTML=h;
+  // 활자대(타이프바) 부채꼴
+  const P={x:260,y:SY-416},fan=$('fan');let f='';
+  for(let i=0;i<44;i++){const a=(26+i*(128/43))*Math.PI/180,c=Math.cos(a),s=Math.sin(a);
+    const x1=P.x+c*104,y1=P.y+s*104,x2=P.x+c*270,y2=P.y+s*270;
+    f+=`<line x1="${x2}" y1="${y2}" x2="${x1}" y2="${y1}" stroke="url(#bg)" stroke-width="3.2"/><rect x="${x1-4}" y="${y1-6}" width="8" height="12" fill="#3a3a3a" transform="rotate(${a*180/Math.PI-90} ${x1} ${y1})"/>`}
+  fan.innerHTML=`<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8e8e8"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient></defs>`+f;
+  // 리본
+  const rb=$('rib');
+  rb.innerHTML=`<line x1="250" y1="452" x2="479" y2="${SY+31}" stroke="#111" stroke-width="9"/><line x1="250" y1="458" x2="479" y2="${SY+37}" stroke="#7d1611" stroke-width="5"/>
+  <line x1="750" y1="452" x2="521" y2="${SY+31}" stroke="#111" stroke-width="9"/><line x1="750" y1="458" x2="521" y2="${SY+37}" stroke="#7d1611" stroke-width="5"/>`;
+  $('guide').style.top=(SY-12)+'px';
 }
-let strikeY=0;
-function layout(){
-  sizes();
-  const pw=(MAXX+MARGIN*2)*U, ph=(TOPL+MAXLINES+3)*LH;
-  const winH=U*30; strikeY=winH;
-  stage.style.height=(winH+70)+'px';
-  carriage.style.width=pw+'px';
-  clip.style.width=pw+'px';clip.style.height=(strikeY+26)+'px';
-  paper.style.width=pw+'px';paper.style.height=ph+'px';
-  platen.style.left='0px';platen.style.width=pw+'px';platen.style.top=(strikeY+4)+'px';platen.style.height='56px';
-  bail.style.left=(pw*.08)+'px';bail.style.width=(pw*.84)+'px';bail.style.top=(strikeY+36)+'px';
-  lever.style.left=(-lever.offsetWidth-30)+'px';lever.style.top=(strikeY+10)+'px';
-  guide.style.top=(strikeY-14)+'px';
-  paper.innerHTML='';els.clear();
-  st.strikes.forEach(drawStrike);
-  move(0);
+function fit(){
+  const s=Math.min(1,(innerWidth-6)/1060);
+  const sc=$('scaler');sc.style.width=(W*s)+'px';sc.style.height=(956*s+6)+'px';
+  $('machine').style.transform=`scale(${s})`;
 }
-function drawStrike(s){
-  const e=document.createElement('span');e.className='s'+(s.c?' red':'');
-  els.set(s,e);styleStrike(s);paper.appendChild(e);
-}
+function render(){paper.innerHTML='';els.clear();st.strikes.forEach(drawStrike);move(0)}
+function drawStrike(s){const e=document.createElement('span');e.className='s'+(s.c?' red':'');els.set(s,e);styleStrike(s);paper.appendChild(e)}
 function styleStrike(s){
-  const e=els.get(s);if(!e)return;
-  e.textContent=s.ch;
-  e.style.cssText=`left:${(MARGIN+s.x)*U+s.dx*U/12}px;top:${(TOPL+s.l)*LH+s.dy*U/12}px;width:${s.w*U}px;height:${LH}px;line-height:${LH}px;font-size:${FS}px;opacity:${s.o};transform:rotate(${s.r}deg)`;
+  const e=els.get(s);if(!e)return;e.textContent=s.ch;
+  e.style.cssText=`left:${(MARGIN+s.x)*U+s.dx}px;top:${(TOPL+s.l)*LH+s.dy}px;width:${s.w*U}px;height:${LH}px;line-height:${LH}px;font-size:${FS}px;opacity:${s.o};transform:rotate(${s.r}deg)`;
 }
 function move(dur){
-  const cx=stage.clientWidth/2;
-  const tx=cx-(MARGIN+st.x+1)*U;
+  const tx=W/2-(MARGIN+st.x+1)*U;
   carriage.style.transition=dur?`transform ${dur}ms cubic-bezier(.3,.7,.3,1)`:'none';
   carriage.style.transform=`translateX(${tx}px)`;
-  const ty=strikeY-(TOPL+st.line+1)*LH+4;
+  const ty=SY-(TOPL+st.line+1)*LH+4;
   paper.style.transition=dur?`transform ${Math.min(dur,160)}ms ease-out`:'none';
   paper.style.transform=`translateY(${ty}px)`;
   status();
@@ -237,12 +272,25 @@ function status(){
   $('bSnd').classList.toggle('on',st.sound);
   document.querySelectorAll('.k[data-c=Lang]').forEach(k=>k.classList.toggle('lit',st.hangul));
   document.querySelectorAll('.k[data-c=ShiftLeft],.k[data-c=ShiftRight]').forEach(k=>k.classList.toggle('lit',shiftSticky));
-  relabel();
+  if(typeof relabel==='function')relabel();
 }
 let msgT;function msg(t){const m=$('msg');m.textContent=t;m.classList.add('show');clearTimeout(msgT);msgT=setTimeout(()=>m.classList.remove('show'),1800)}
 function lock(t){snd.thunk();stage.classList.remove('shake');void stage.offsetWidth;stage.classList.add('shake');if(t)msg(t)}
-function hit(){ribbon.classList.add('hit');setTimeout(()=>ribbon.classList.remove('hit'),70)}
-
+/* 타격: 리본이 올라오고, 해당 키의 활자대가 부채꼴에서 튀어 올라 종이를 때림 */
+let ORDER=[];
+function hit(){
+  ribbon.classList.add('hit');setTimeout(()=>ribbon.classList.remove('hit'),70);
+  ['sp1','sp2'].forEach(id=>{const e=$(id);e.classList.remove('turn');void e.offsetWidth;e.classList.add('turn')});
+  let i=ORDER.indexOf(lastCode);if(i<0)i=Math.floor(Math.random()*ORDER.length);
+  const a=(154-(i/(ORDER.length-1))*128)*Math.PI/180,c=Math.cos(a),s=Math.sin(a),P={x:500,y:SY+14};
+  const L=$('abl'),R=$('abs'),t0=performance.now(),D=120;
+  L.setAttribute('opacity',1);R.setAttribute('opacity',1);
+  (function f(now){let t=Math.min(1,(now-t0)/D);const k=t<.45?t/.45:1-(t-.45)/.55;const r=104-k*100;
+    const x1=P.x+c*r,y1=P.y+s*r,x2=P.x+c*(r+150),y2=P.y+s*(r+150);
+    L.setAttribute('x1',x2);L.setAttribute('y1',y2);L.setAttribute('x2',x1);L.setAttribute('y2',y1);
+    R.setAttribute('transform',`translate(${x1} ${y1}) rotate(${a*180/Math.PI-90})`);
+    if(t<1)requestAnimationFrame(f);else{L.setAttribute('opacity',0);R.setAttribute('opacity',0)}})(t0);
+}
 /* ================= 타자 동작 ================= */
 const rnd=(a,b)=>a+Math.random()*(b-a);
 function canPlace(w){
@@ -333,7 +381,7 @@ function newPaper(){
 function toggleLang(){commit();st.hangul=!st.hangul;snd.lf();status();save()}
 
 /* ================= 입력 처리 ================= */
-function press(code,shift,caps){
+function press(code,shift,caps){lastCode=code;
   if(code==='Lang'){toggleLang();return}
   if(code==='Backspace'){back();return}
   if(code==='Enter'){ret();return}
@@ -347,6 +395,7 @@ function press(code,shift,caps){
 }
 addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey)return;
+  if(e.target&&e.target.id==='ta')return;
   const code=e.code;
   if(code==='Lang1'||e.key==='HangulMode'||code==='AltRight'||(code==='Space'&&e.shiftKey)){e.preventDefault();if(!e.repeat)toggleLang();flash('Lang');return}
   const ok=code==='Backspace'||code==='Enter'||code==='Space'||code==='Tab'||/^Key[A-Z]$/.test(code)||SYM[code];
@@ -361,41 +410,62 @@ let shiftHeld=false;
 addEventListener('keyup',e=>{if(e.code.startsWith('Shift')){shiftHeld=false;relabel()}});
 addEventListener('blur',()=>{shiftHeld=false;relabel()});
 
-/* ================= 화면 자판 ================= */
+/* ================= 타자기 자판 ================= */
 const ROWS=[
   ['Backquote','Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0','Minus','Equal','Backspace'],
   ['Tab','KeyQ','KeyW','KeyE','KeyR','KeyT','KeyY','KeyU','KeyI','KeyO','KeyP','BracketLeft','BracketRight'],
-  ['KeyA','KeyS','KeyD','KeyF','KeyG','KeyH','KeyJ','KeyK','KeyL','Semicolon','Quote','Enter'],
-  ['ShiftLeft','KeyZ','KeyX','KeyC','KeyV','KeyB','KeyN','KeyM','Comma','Period','Slash','ShiftRight'],
-  ['Lang','Space']
+  ['Lang','KeyA','KeyS','KeyD','KeyF','KeyG','KeyH','KeyJ','KeyK','KeyL','Semicolon','Quote','Enter'],
+  ['ShiftLeft','KeyZ','KeyX','KeyC','KeyV','KeyB','KeyN','KeyM','Comma','Period','Slash','ShiftRight']
 ];
-const NAMES={Backspace:'⌫ 뒤로',Tab:'Tab',Enter:'줄바꿈',ShiftLeft:'⇧ Shift',ShiftRight:'⇧ Shift',Lang:'한/영',Space:''};
-const kb=$('kb');const keyEls={};
-ROWS.forEach((r,ri)=>{const row=document.createElement('div');row.className='row';if(ri===2&&innerWidth>=760)row.style.marginLeft='20px';
+const ROWX=[18,30,14,22], NAMES={Backspace:'뒤로',Tab:'Tab',Enter:'줄바꿈',ShiftLeft:'Shift',ShiftRight:'Shift',Lang:'한/영'};
+ORDER=ROWS.flat().filter(c=>!NAMES[c]);
+const kb=$('kb'),keyEls={};
+function bindKey(k,c){
+  k.addEventListener('pointerdown',ev=>{ev.preventDefault();
+    if(c==='ShiftLeft'||c==='ShiftRight'){shiftSticky=!shiftSticky;snd.lf();status();return}
+    k.classList.add('down');setTimeout(()=>k.classList.remove('down'),110);
+    press(c,shiftSticky,false);
+    if(shiftSticky&&c!=='Lang'){shiftSticky=false;status()}
+  });
+}
+ROWS.forEach((r,ri)=>{const row=document.createElement('div');row.className='row';row.style.left=ROWX[ri]+'px';row.style.top=(14+ri*58)+'px';
   r.forEach(c=>{const k=document.createElement('div');k.className='k';k.dataset.c=c;
-    if(NAMES[c]!==undefined){k.classList.add(c==='Space'?'sp':'wide');k.innerHTML=`<span class="m">${NAMES[c]}</span>`}
+    if(NAMES[c]){k.classList.add('wide');k.innerHTML=`<span class="m">${NAMES[c]}</span>`}
     else k.innerHTML='<span class="sh"></span><span class="m"></span><span class="en"></span>';
-    k.addEventListener('pointerdown',ev=>{ev.preventDefault();
-      if(c==='ShiftLeft'||c==='ShiftRight'){shiftSticky=!shiftSticky;snd.lf();status();return}
-      k.classList.add('down');setTimeout(()=>k.classList.remove('down'),110);
-      press(c,shiftSticky,false);
-      if(shiftSticky&&c!=='Lang'){shiftSticky=false;status()}
-    });
-    keyEls[c]=k;row.appendChild(k)});
+    bindKey(k,c);keyEls[c]=k;row.appendChild(k)});
   kb.appendChild(row)});
+const sp=document.createElement('div');sp.id='space';sp.dataset.c='Space';bindKey(sp,'Space');keyEls.Space=sp;kb.appendChild(sp);
 function relabel(){
   const sh=shiftHeld||shiftSticky;
-  for(const c in keyEls){const k=keyEls[c];if(NAMES[c]!==undefined)continue;
+  for(const c in keyEls){const k=keyEls[c];if(NAMES[c]||c==='Space')continue;
     const m=k.querySelector('.m'),s=k.querySelector('.sh'),en=k.querySelector('.en');
-    if(/^Key/.test(c)){
-      const L=c.slice(3);
+    if(/^Key/.test(c)){const L=c.slice(3);
       if(st.hangul){m.textContent=(sh&&KOS[c])?KOS[c]:KO[c];s.textContent=(!sh&&KOS[c])?KOS[c]:'';en.textContent=L}
       else{m.textContent=sh?L:L.toLowerCase();s.textContent='';en.textContent=KO[c]}
     }else{m.textContent=SYM[c][sh?1:0];s.textContent=sh?'':SYM[c][1];en.textContent=''}
   }
 }
-function flash(code){const k=keyEls[code]||(code==='Lang'?keyEls.Lang:null);if(!k)return;k.classList.add('down');setTimeout(()=>k.classList.remove('down'),110)}
+function flash(code){const k=keyEls[code];if(!k)return;k.classList.add('down');setTimeout(()=>k.classList.remove('down'),110)}
 
+/* ================= 폰 키보드 (휴대폰 자체 키보드로 입력) ================= */
+const ta=$('ta'),SENT='  ';let taPrev=SENT;ta.value=SENT;
+function typeAny(ch){
+  if(ch==='\n'){ret();return}
+  if(ch===' '||ch===' '){space();return}
+  const c=ch.charCodeAt(0);
+  if((c>=0xAC00&&c<=0xD7A3)||(c>=0x3131&&c<=0x318E)){commit();if(!canPlace(2))return;lastCode='';snd.key();hit();newStrike(ch,2);advance(2);save();return}
+  typeChar(ch);
+}
+function flushTA(){
+  const v=ta.value;let i=0;while(i<v.length&&i<taPrev.length&&v[i]===taPrev[i])i++;
+  for(let n=taPrev.length-i;n>0;n--)back();
+  for(const ch of v.slice(i))typeAny(ch);
+  taPrev=v;
+  if(v.length<SENT.length||v.length>120){ta.value=SENT;taPrev=SENT}
+}
+ta.addEventListener('input',e=>{if(e.isComposing)return;flushTA()});
+ta.addEventListener('compositionend',()=>setTimeout(flushTA,0));
+$('bPhone').onclick=()=>{ta.value=SENT;taPrev=SENT;ta.focus();msg('휴대폰 키보드로 치세요 — 글자가 완성되면 찍혀요')};
 /* ================= 버튼 ================= */
 $('bLang').onclick=toggleLang;
 $('bInk').onclick=()=>{commit();st.red=!st.red;snd.lf();status();save()};
@@ -433,9 +503,10 @@ $('bPng').onclick=async()=>{
 };
 
 /* ================= 시작 ================= */
-addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(layout,120)});
-document.fonts&&document.fonts.load('22px DXType','가A').finally(layout);
-layout();relabel();status();
+addEventListener('resize',fit);
+build();fit();
+document.fonts&&document.fonts.load('22px DXType','가A').finally(render);
+render();relabel();status();
 if(!st.strikes.length)setTimeout(()=>msg('아무 키나 눌러 타자를 시작하세요'),600);
 })();
 </script>
