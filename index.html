@@ -151,7 +151,12 @@ select{appearance:none;-webkit-appearance:none;padding-right:24px;background-ima
 #hint{color:#d9c7a6;font-size:13px;margin-top:12px;line-height:1.75}
 #hint kbd{font-family:inherit;background:#111;border:1px solid #000;border-radius:4px;padding:0 5px;color:#eee}
 #hint .c-j{color:#a6e0a8}#hint .c-v{color:#f6d27a}
-#ta{position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0;resize:none}
+/* ---------- 종이 보기 (휴대폰 키보드로 칠 때) ---------- */
+body.pv #scaler{overflow:hidden;padding-top:0;box-shadow:0 6px 14px #0008;cursor:text}
+body.pv .grp,body.pv #hint,body.pv #bInk,body.pv #bBs,body.pv #bPng,body.pv #bLang{display:none}
+body.pv #desk{padding-top:10px}
+#bView{display:inline-block}
+#ta{position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0;resize:none}
 </style>
 </head>
 <body>
@@ -205,6 +210,7 @@ select{appearance:none;-webkit-appearance:none;padding-right:24px;background-ima
  </div>
  <div id="ctrls">
   <button class="btn" id="bPhone">⌨ 폰 키보드로 치기</button>
+  <button class="btn" id="bView">📄 종이 크게 보기</button>
   <button class="btn" id="bLang"><span class="lamp"></span>한/영</button>
   <button class="btn" id="bInk">리본: 검정</button>
   <button class="btn" id="bBs">백스페이스: 지우기</button>
@@ -399,8 +405,17 @@ function build(){
   $('guide').style.top=(SY-12)+'px';
 }
 function fit(){
+  const sc=$('scaler');
+  if(document.body.classList.contains('pv')){
+    // 종이 보기: 활자가 찍히는 자리를 가운데 두고 종이 윗부분만 크게
+    const half=Math.max(230,Math.min(420,innerWidth*.72)),cx=M.kind==='elec'?FIXTX+(MARGIN+st.x+1)*U:W/2,
+      x0=cx-half,y0=SY-LH*6.2,y1=SY+104,s=innerWidth/(half*2);
+    sc.style.width=innerWidth+'px';sc.style.height=((y1-y0)*s)+'px';
+    machine.style.transform=`translate(${-x0*s}px,${-y0*s}px) scale(${s})`;return;
+  }
+  machine.style.transition='none';
   const s=Math.min(1,(innerWidth-6)/1060);
-  const sc=$('scaler');sc.style.width=(W*s)+'px';sc.style.height=(956*s+6)+'px';
+  sc.style.width=(W*s)+'px';sc.style.height=(956*s+6)+'px';
   machine.style.transform=`scale(${s})`;
 }
 
@@ -457,6 +472,7 @@ function moveTo(x,line,dur){
   const ty=SY-(TOPL+line+1)*LH+4;
   paper.style.transition=dur?`transform ${Math.min(dur,160)}ms ease-out`:'none';
   paper.style.transform=`translateY(${ty}px)`;
+  if(elec&&document.body.classList.contains('pv')){machine.style.transition=dur?`transform ${dur}ms cubic-bezier(.3,.7,.3,1)`:'none';fit()}
   status();
 }
 let keyEls=null,LIT=null;const _txt=new Map();
@@ -722,7 +738,19 @@ function flushTA(){
 }
 ta.addEventListener('input',e=>{if(e.isComposing)return;flushTA()});
 ta.addEventListener('compositionend',()=>setTimeout(flushTA,0));
-$('bPhone').onclick=()=>{ta.value=SENT;taPrev=SENT;ta.focus();msg('휴대폰 키보드로 치세요 — 글자가 완성되면 찍혀요')};
+// 휴대폰 키보드에서 조합 중인 글자를 보여 줘서 오타를 바로 알 수 있게
+ta.addEventListener('compositionupdate',e=>{const d=(e.data||'').slice(-1);setT('pend','치는 중: '+(d||'—'))});
+function setPV(on){
+  document.body.classList.toggle('pv',on);
+  $('bView').textContent=on?'🖨 타자기 보기':'📄 종이 크게 보기';
+  $('bPhone').textContent=on?'⌨ 키보드 열기':'⌨ 폰 키보드로 치기';
+  fit();scrollTo(0,0);
+}
+function openKB(){ta.value=SENT;taPrev=SENT;ta.focus({preventScroll:true});setTimeout(()=>scrollTo(0,0),300)}
+$('bPhone').onclick=()=>{if(!document.body.classList.contains('pv'))setPV(true);openKB();msg('휴대폰 키보드로 치세요 — 글자가 완성되면 찍혀요')};
+$('bView').onclick=()=>{const on=!document.body.classList.contains('pv');if(!on)ta.blur();setPV(on)};
+$('scaler').addEventListener('click',()=>{if(document.body.classList.contains('pv'))openKB()});
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>{if(document.body.classList.contains('pv'))scrollTo(0,0)});
 
 /* ================= 글 / 그림 ================= */
 function cellText(arr){
@@ -776,7 +804,7 @@ function hintText(){
   $('hint').innerHTML=h+'<br><kbd>Shift</kbd>+<kbd>Space</kbd> 또는 <kbd>한/영</kbd> 한영 전환 · <kbd>Enter</kbd>나 왼쪽 레버로 줄바꿈 · 줄 끝 8칸 전에 종이 울려요';
 }
 function applyModel(){
-  M=MODELS[st.model];machine.dataset.m=st.model;
+  M=MODELS[st.model];machine.dataset.m=st.model;fit();
   if(!M.inputs.includes(st.input))st.input=M.inputs[0];
   const si=$('sInput');si.style.display=M.inputs.length>1?'':'none';si.value=st.input;
   $('sModel').value=st.model;$('sPaper').value=st.paper;
